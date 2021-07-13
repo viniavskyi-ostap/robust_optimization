@@ -1,0 +1,14 @@
+data:
+  low: [-1.0, -1.0]
+  high: [1.0, 1.0]
+  num_points_range: [100, 101] # high not included
+  batch_size: 16 # batch size per gpu
+  outliers_ratio_range: [0.7, 0.9]
+  cov_eigenvalues_range: [0.02, 0.05]
+  ds_size: 1000 # batches per epoch
+  num_workers: 4
+
+model:
+  num_iter: 5
+  feat_trans_loss_weight: 0.01
+  lr: 0.0001
