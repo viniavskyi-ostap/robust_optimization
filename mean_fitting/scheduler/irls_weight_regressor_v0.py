@@ -117,11 +117,14 @@ def train():
     with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'config/irls_weight_regressor_v0.yaml')) as f:
         config = yaml.full_load(f)
 
+    config['data']['low'] = eval(config['data']['low'])
+    config['data']['high'] = eval(config['data']['high'])
+
     dm = Noisy2DPointsDataModule(**config['data'])
 
     model = IRLSWeightRegressor(point_dim=len(config['data']['low']), **config['model'])
 
-    trainer = pl.Trainer(log_every_n_steps=1, gpus=[0], accelerator='dp',
+    trainer = pl.Trainer(log_every_n_steps=1, gpus=[0, 1, 2], accelerator='dp',
                          max_epochs=15)
     trainer.fit(model, datamodule=dm)
 
@@ -143,10 +146,10 @@ def run():
     ds = Noisy2DPointsDataset(
         low=np.array([-1.0] * 2),
         high=np.array([1.0] * 2),
-        num_points_range=(1000, 1001),
+        num_points_range=(100, 101),
         batch_size=1,
         outliers_ratio_range=(0.8, 0.8),
-        cov_eigenvalues_range=(0.05, 0.05),
+        cov_eigenvalues_range=(0.02, 0.05),
         ds_size=100
     )
 
@@ -180,14 +183,20 @@ def run():
 
     loss_rule_based = np.array(loss_rule_based)
     # loss_rule_based = loss_rule_based[~np.isnan(loss_rule_based)]
-    fig, axes = plt.subplots(ncols=2)
+    fig, axes = plt.subplots(ncols=2, figsize=(15, 7))
     axes[0].hist(losses_learned)
+    axes[0].set_xlabel('Distribution of norm of (y_true - y_pred)')
+    axes[0].title.set_text(f'Learned IRLS, mean: {np.mean(losses_learned)}')
+
     axes[1].hist(loss_rule_based)
+    axes[1].set_xlabel('Distribution of norm of (y_true - y_pred)')
+    axes[1].title.set_text(f'Rule_based GNC, mean:{np.mean(loss_rule_based)}')
+
     plt.show()
     print(np.mean(losses_learned))
     print(np.mean(loss_rule_based))
 
 
 if __name__ == '__main__':
-    # train()
-    run()
+    train()
+    # run()
